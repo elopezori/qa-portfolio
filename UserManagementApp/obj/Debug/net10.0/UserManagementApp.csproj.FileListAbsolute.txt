@@ -95,3 +95,4 @@
 /Users/elopez/Projects/qa-portfolio/UserManagementApp/obj/Debug/net10.0/UserManagementApp.pdb
 /Users/elopez/Projects/qa-portfolio/UserManagementApp/obj/Debug/net10.0/UserManagementApp.genruntimeconfig.cache
 /Users/elopez/Projects/qa-portfolio/UserManagementApp/obj/Debug/net10.0/ref/UserManagementApp.dll
+/Users/elopez/Projects/qa-portfolio/UserManagementApp/obj/Debug/net10.0/UserManagementApp.sourcelink.json
