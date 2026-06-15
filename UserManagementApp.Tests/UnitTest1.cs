@@ -25,4 +25,24 @@ public class UserTests
         Assert.Contains("Juan", content);
         Assert.Contains("Ana", content);
     }
+
+    [Fact]
+    public async Task CreatePage_Should_Load()
+    {
+        using var playwright = await Playwright.CreateAsync();
+
+        await using var browser = await playwright.Chromium.LaunchAsync(
+            new BrowserTypeLaunchOptions
+            {
+                Headless = true
+            });
+
+        var page = await browser.NewPageAsync();
+
+        await page.GotoAsync("http://localhost:5167/Users/Create");
+
+        var content = await page.ContentAsync();
+
+        Assert.Contains("Create User", content);
+    }
 }
