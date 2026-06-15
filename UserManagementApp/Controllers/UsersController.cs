@@ -15,4 +15,21 @@ public class UsersController : Controller
 
         return View(users);
     }
+
+    [HttpGet]
+    public IActionResult Create()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public IActionResult Create(User user)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(user);
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
 }
