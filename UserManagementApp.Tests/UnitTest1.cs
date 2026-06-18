@@ -57,41 +57,42 @@ public class UserTests
     }
 
     [Fact]
-public async Task UsersPage_Should_Display_Table()
-{
-    using var playwright = await Playwright.CreateAsync();
+    public async Task UsersPage_Should_Display_Table()
+    {
+        using var playwright = await Playwright.CreateAsync();
 
-    await using var browser = await playwright.Chromium.LaunchAsync(
-        new BrowserTypeLaunchOptions
+        await using var browser = await playwright.Chromium.LaunchAsync(
+            new BrowserTypeLaunchOptions
+            {
+                Headless = true
+            });
+
+        var context = await browser.NewContextAsync();
+
+        await context.Tracing.StartAsync(new()
         {
-            Headless = true
+            Screenshots = true,
+            Snapshots = true
         });
 
-    var context = await browser.NewContextAsync();
+        var page = await context.NewPageAsync();
 
-    await context.Tracing.StartAsync(new()
-    {
-        Screenshots = true,
-        Snapshots = true
-    });
-
-    var page = await context.NewPageAsync();
-
-    try
-    {
-        await page.GotoAsync(BaseUrl);
-
-        var table = await page.QuerySelectorAsync("table");
-
-        Assert.NotNull(table);
-    }
-    finally
-    {
-        Directory.CreateDirectory("TestResults");
-
-        await context.Tracing.StopAsync(new()
+        try
         {
-            Path = "TestResults/trace.zip"
-        });
+            await page.GotoAsync(BaseUrl);
+
+            var table = await page.QuerySelectorAsync("table");
+
+            Assert.NotNull(table);
+        }
+        finally
+        {
+            Directory.CreateDirectory("TestResults");
+
+            await context.Tracing.StopAsync(new()
+            {
+                Path = "TestResults/trace.zip"
+            });
+        }
     }
 }
