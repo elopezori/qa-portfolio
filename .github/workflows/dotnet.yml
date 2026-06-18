@@ -9,6 +9,11 @@ on:
     branches:
       - main
 
+  workflow_dispatch:
+
+  schedule:
+    - cron: '0 0 * * *'
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
