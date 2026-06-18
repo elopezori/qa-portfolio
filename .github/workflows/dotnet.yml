@@ -39,13 +39,11 @@ jobs:
       - name: Install Playwright Browsers
         run: playwright install
 
-      # ✅ ARRANCA TU API REAL (NO LOS TESTS)
       - name: Start API
         run: |
           dotnet run --project UserManagementApp/UserManagementApp.csproj --urls http://localhost:5167 > api.log 2>&1 &
           echo $! > api.pid
 
-      # ✅ ESPERA INTELIGENTE (NO sleep fijo)
       - name: Wait for API
         run: |
           for i in {1..20}; do
@@ -61,11 +59,17 @@ jobs:
       - name: Run tests
         run: dotnet test --no-build
 
-      - name: Upload test results
+      - name: Debug generated files
+        if: always()
+        run: |
+          echo "Searching traces..."
+          find . -name "*.zip"
+          find . -type d -name "TestResults"
+
+      - name: Upload Playwright traces
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
-          path: |
-            TestResults
-            playwright-report
+          name: playwright-traces
+          path: '**/trace.zip'
+          if-no-files-found: warn
