@@ -1,93 +1,75 @@
 name: .NET CI
 
 on:
-push:
-branches:
-- main
+  push:
+    branches:
+      - main
 
-pull_request:
-branches:
-- main
+  pull_request:
+    branches:
+      - main
 
-workflow_dispatch:
+  workflow_dispatch:
 
-schedule:
-- cron: '0 0 * * *'
+  schedule:
+    - cron: '0 0 * * *'
 
 jobs:
-build-and-test:
-runs-on: ubuntu-latest
+  build-and-test:
+    runs-on: ubuntu-latest
 
-steps:
-  - name: Checkout repository
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  - name: Setup .NET
-    uses: actions/setup-dotnet@v4
-    with:
-      dotnet-version: '9.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
 
-  - name: Restore dependencies
-    run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-  - name: Build solution
-    run: dotnet build --no-restore
+      - name: Build solution
+        run: dotnet build --no-restore
 
-  - name: Install Playwright CLI tools
-    run: dotnet tool install --global Microsoft.Playwright.CLI
+      - name: Install Playwright CLI tools
+        run: dotnet tool install --global Microsoft.Playwright.CLI
 
-  - name: Install Playwright Browsers
-    run: playwright install
+      - name: Install Playwright Browsers
+        run: playwright install
 
-  - name: Start API
-    run: |
-      dotnet run --project UserManagementApp/UserManagementApp.csproj --urls http://localhost:5167 > api.log 2>&1 &
-      echo $! > api.pid
+      - name: Start API
+        run: |
+          dotnet run --project UserManagementApp/UserManagementApp.csproj --urls http://localhost:5167 > api.log 2>&1 &
+          echo $! > api.pid
 
-  - name: Wait for API
-    run: |
-      for i in {1..20}; do
-        if curl -s http://localhost:5167/Users > /dev/null; then
-          echo "API ready"
-          exit 0
-        fi
+      - name: Wait for API
+        run: |
+          for i in {1..20}; do
+            curl -s http://localhost:5167/Users && echo "API ready" && exit 0
+            echo "waiting API..."
+            sleep 2
+          done
 
-        echo "waiting API..."
-        sleep 2
-      done
+          echo "API failed to start"
+          cat api.log
+          exit 1
 
-      echo "API failed to start"
-      cat api.log
-      exit 1
+      - name: Run tests
+        run: dotnet test --no-build
 
-  - name: Run tests
-    run: |
-      dotnet test --no-build --logger "trx;LogFileName=test-results.trx"
+      - name: Debug generated files
+        if: always()
+        run: |
+          echo "Searching traces..."
+          find . -name "*.zip"
+          find . -type d -name "TestResults"
 
-  - name: Debug generated files
-    if: always()
-    run: |
-      echo "=== TRX Files ==="
-      find . -name "*.trx"
-
-      echo "=== Trace Files ==="
-      find . -name "trace.zip"
-
-      echo "=== TestResults Directories ==="
-      find . -type d -name "TestResults"
-
-  - name: Upload test results
-    uses: actions/upload-artifact@v4
-    if: always()
-    with:
-      name: test-results
-      path: '**/*.trx'
-      if-no-files-found: warn
-
-  - name: Upload Playwright traces
-    uses: actions/upload-artifact@v4
-    if: always()
-    with:
-      name: playwright-traces
-      path: '**/trace.zip'
-      if-no-files-found: warn
+      - name: Upload Playwright traces
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-traces
+          path: '**/trace.zip'
+          if-no-files-found: warn
