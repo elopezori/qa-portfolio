@@ -1,3 +1,4 @@
+using System.IO;
 using Microsoft.Playwright;
 using Xunit;
 
@@ -56,17 +57,41 @@ public class UserTests
     }
 
     [Fact]
-    public async Task UsersPage_Should_Display_Table()
-    {
-        using var playwright = await Playwright.CreateAsync();
-        await using var browser = await playwright.Chromium.LaunchAsync(
-            new BrowserTypeLaunchOptions { Headless = true });
+public async Task UsersPage_Should_Display_Table()
+{
+    using var playwright = await Playwright.CreateAsync();
 
-        var page = await browser.NewPageAsync();
+    await using var browser = await playwright.Chromium.LaunchAsync(
+        new BrowserTypeLaunchOptions
+        {
+            Headless = true
+        });
+
+    var context = await browser.NewContextAsync();
+
+    await context.Tracing.StartAsync(new()
+    {
+        Screenshots = true,
+        Snapshots = true
+    });
+
+    var page = await context.NewPageAsync();
+
+    try
+    {
         await page.GotoAsync(BaseUrl);
 
         var table = await page.QuerySelectorAsync("table");
 
         Assert.NotNull(table);
+    }
+    finally
+    {
+        Directory.CreateDirectory("TestResults");
+
+        await context.Tracing.StopAsync(new()
+        {
+            Path = "TestResults/trace.zip"
+        });
     }
 }
